@@ -7,7 +7,8 @@ class HashTable:
         self.array = [None for _ in range(self.array_size)]
 
     def hash(self, key, collision_count=0):                       # start with collision count of zero.
-        key_bytes = key.encode()                                  # encode the key into bytes
+        string_key = str(key)
+        key_bytes = string_key.encode()                                  # encode the key into bytes
         hash_code = sum(key_bytes)                                # convert to hash_code from bytes
         return (hash_code + collision_count) % self.array_size    # if collisions, add collision number to the hash_code
 
@@ -43,28 +44,33 @@ class HashTable:
 
         return                                                     # return once the hash_value at the index is the key
 
-    def find(self, id):                                       # to retrieve a given key,
-        index = self.hash(id)                                     # hash the key to get an index
-        hash_value = self.array[index]                             # get the value at that index in the hash table
+    def find(self, id):                                             # to retrieve a given package by package id,
+        str_id = str(id)
+        index = self.hash(str_id)                                     # hash the id to get an index
+        package = self.array[index]                             # get the value at that index in the hash table
 
-        if hash_value is None:                                     # if none, then nothing to retrieve, return none.
+        if package is None:                                     # if none, then nothing to retrieve, return none.
             return None
 
-        if hash_value[0] == id:                                   # if the value is the key
-            return hash_value[1]                                   # return the key's value
+        if package[0] == str_id:                                   # if the value is the key
+            return package[1]                                   # return the key's value
 
         # if value is neither "none" nor key, then its a collision
         collisions = 1                                             # make collision counter --> 1
 
-        while hash_value != id:                                   # while collisions continue,
-            index = self.hash(id, collisions)                     # find new index using the key + collision (>0)
-            hash_value = self.array[index]                         # get the new value in the new index
+        while package != str_id:                                   # while collisions continue,
+            index = self.hash(str_id, collisions)                     # find new index using the id + collision (>0)
+            package = self.array[index]                         # get the new value in the new index
 
-            if hash_value is None:
+            if package is None:
                 return None
 
-            if hash_value[0] == id:
-                return hash_value[1]
+            if package[0] == str_id:
+                return package[1]
 
             # another collision!
             collisions += 1                                        # increment collision number and continue while loop
+
+    def display_table(self):
+        for x in range(1, 41):
+            print(self.find(x))
