@@ -1,16 +1,15 @@
 
 class HashTable:
-    def __init__(self, capacity=100):                             # default capacity of array is 100, if none passed in.
+    def __init__(self, capacity):                             # default capacity of array is 100, if none passed in.
         self.array_size = capacity                        # if less than 100 capacity (number of packages), set to that.
         if capacity > 99:                                 # if more than 100 capacity (number of packages) is passed in,
             self.array_size = 100                         # then the capacity will be set to 100.
-        self.array = [None for _ in range(self.array_size)]
+        self.array = [None for _ in range(self.array_size + 1)]
 
     def hash(self, key, collision_count=0):                       # start with collision count of zero.
-        string_key = str(key)
-        key_bytes = string_key.encode()                                  # encode the key into bytes
-        hash_code = sum(key_bytes)                                # convert to hash_code from bytes
-        return (hash_code + collision_count) % self.array_size    # if collisions, add collision number to the hash_code
+        hash_code = (int(key) - 1) % self.array_size
+
+        return hash_code + collision_count                    # if collisions, add collision num to the hash_code
 
     def insert_or_update(self, package):                                 # to assign a value to the hash table,
         index = self.hash(package.id)                                    # find an index from hashing the key
@@ -44,33 +43,32 @@ class HashTable:
 
         return                                                     # return once the hash_value at the index is the key
 
-    def find(self, id):                                             # to retrieve a given package by package id,
-        str_id = str(id)
-        index = self.hash(str_id)                                     # hash the id to get an index
+    def find(self, package_id):                                             # to retrieve a given package by package id,
+        index = self.hash(package_id)                                     # hash the id to get an index
         package = self.array[index]                             # get the value at that index in the hash table
 
         if package is None:                                     # if none, then nothing to retrieve, return none.
             return None
 
-        if package[0] == str_id:                                   # if the value is the key
+        if int(package[0]) == package_id:                                   # if the value is the key
             return package[1]                                   # return the key's value
 
         # if value is neither "none" nor key, then its a collision
         collisions = 1                                             # make collision counter --> 1
 
-        while package != str_id:                                   # while collisions continue,
-            index = self.hash(str_id, collisions)                     # find new index using the id + collision (>0)
+        while package != package_id:                                   # while collisions continue,
+            index = self.hash(package_id, collisions)                     # find new index using the id + collision (>0)
             package = self.array[index]                         # get the new value in the new index
 
             if package is None:
                 return None
 
-            if package[0] == str_id:
+            if int(package[0]) == package_id:
                 return package[1]
 
             # another collision!
             collisions += 1                                        # increment collision number and continue while loop
 
     def display_table(self):
-        for x in range(1, 41):
-            print(self.find(x))
+        for x in range(1, self.array_size):
+            print((str(x)) + " " + str(self.find(x)))

@@ -11,25 +11,8 @@ class Package:
         self.mass_kg = mass_kg
         self.special_notes = special_notes
         self.priority_heuristic = 0
-        # if special_notes is None:
-        #     self.special_notes = ""
         self.location = "Hub"
         self.time_delivered = "N/A"
-        # self.distances = distances
-        # if distances is None:
-        #     {}
-
-    # def add_distances(self, distances):
-    #     self.distances = distances
-    #     return self
-
-    # def print_distances(self):
-    #     for key, value in self.distances.items():
-    #         print(key, ' : ', value)
-
-    # def move_to_truck(self, truck):
-    #     truck.packages_on_board.append(self)
-    #     self.location = truck
 
     def set_priority(self, priority):
         self.priority_heuristic = priority
