@@ -10,6 +10,7 @@ class Package:
         self.delivery_deadline = delivery_deadline
         self.mass_kg = mass_kg
         self.special_notes = special_notes
+        self.priority_heuristic = 0
         # if special_notes is None:
         #     self.special_notes = ""
         self.location = "Hub"
@@ -29,6 +30,11 @@ class Package:
     # def move_to_truck(self, truck):
     #     truck.packages_on_board.append(self)
     #     self.location = truck
+
+    def set_priority(self, priority):
+        self.priority_heuristic = priority
+
+        return "priority set to " + str(priority)
 
     def deliver(self, time):
         self.location = "delivered"

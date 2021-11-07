@@ -10,6 +10,7 @@ class Truck:
         self.location = "Hub"
         self.miles_travelled = 0
         self.clock = datetime.datetime(1990, 1, 1, time, 0, 0, 0)
+        self.completed_trips = 0
 
     def current_last_package(self):
         if self.packages_on_board:
@@ -24,6 +25,10 @@ class Truck:
         self.clock = self.clock + time_delta
         print('clock for ' + self.name + ' is now ' + str(self.clock))
         return str(self.clock)
+
+    def increment_trip_count(self):
+        self.completed_trips += 1
+        print("incremented trip count for " + self.name)
 
 
 
