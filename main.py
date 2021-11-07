@@ -16,7 +16,7 @@ current_time = datetime.datetime(1990, 1, 1, 8, 0, 0, 0)
 last_packages_available_time = datetime.datetime(1990, 1, 1, 9, 5, 0, 0)
 returned_for_late_priority_packages = False
 truck1 = Truck('truck1')
-truck2 = Truck('truck2', hour_time=9, minute_time=5)
+truck2 = Truck('truck2')
 
 
 def update_time_check_print(truck_time):
@@ -83,14 +83,17 @@ def distance_between(address1, address2):
 
 # function to load truck by package
 def load_truck(truck, selected_package):
-    # print("total available packages are: ")
-    # for package in total_available_package_list:
-    #     print(package)
-    #
-    # print("selected_package is " + str(print(selected_package)))
+    global package_hashtable
+    print("total available packages are: ")
+    for package in total_available_package_list:
+        print(package)
 
+    print("selected_package is " + str(print(selected_package)))
+
+    package_hashtable.display_table()
     package_index = total_available_package_list.index(selected_package)  # gets index of package in the list
     package_to_load = total_available_package_list.pop(package_index)  # removes package from list to load it
+    print("package to load is: " + str(package_to_load))
     truck.packages_on_board.append(package_to_load)  # adds package to trucks list to deliver
     package_to_load.location = truck.name  # updates package location to truck (name)
     package_hashtable.insert_or_update(package_to_load)  # updates hash table that holds package info
@@ -116,6 +119,7 @@ def add_packages_to_list(package_ids_to_add):
 def auto_load_truck(truck):
     global total_available_package_list, current_time, last_packages_available_time
 
+    print("loading: " + truck.name)
     package_ids_only_truck2 = [3, 18, 36, 38]
     package_ids_only_truck2_2 = [13, 14, 15, 16, 19, 20]
     package_ids_not_before_9 = [6, 9, 25, 28, 32]
@@ -124,15 +128,10 @@ def auto_load_truck(truck):
     packages_only_truck2_2 = add_packages_to_list(package_ids_only_truck2_2)
     packages_not_before_9 = add_packages_to_list(package_ids_not_before_9)
 
-    # packages_for_end_of_day = []
-    # for package in total_available_package_list:
-    #     if package.delivery_deadline == "EOD" and package.special_notes == "":
-    #         packages_for_end_of_day.append(package)
-
     effectively_available_package_list = total_available_package_list
 
-    print(
-        "current time is " + str(current_time) + "last packages available time is " + str(last_packages_available_time))
+    print("current time " + str(current_time) + "last packages available time is " + str(last_packages_available_time))
+
     if current_time < last_packages_available_time:  # if time before 9:05 AM can't deliver 6, (9?), 25, 28, 32
         effectively_available_package_list = [package for package in total_available_package_list if
                                               package not in packages_not_before_9]
@@ -158,12 +157,14 @@ def auto_load_truck(truck):
 
     # finishes filling both trucks.
     while (len(truck.packages_on_board) < truck.max_packages) and effectively_available_package_list:
-        # print("truck's current last package is " + str(truck.current_last_package()))
-        # print("effectively available packages for " + truck.name + " are: ")
+        print("truck's current last package is " + str(truck.current_last_package()))
+        print("effectively available packages for " + truck.name + " are: ")
         # for package in effectively_available_package_list:
         #     print(package)
         # print("end of print")
+
         next_package_to_load = find_next_package(effectively_available_package_list, truck.current_last_package())
+        print("the next package to load is: " + str(next_package_to_load))
         # print("next_package_to_load is " + str(next_package_to_load))
         package_to_load_index = effectively_available_package_list.index(next_package_to_load)
         effectively_available_package_list.pop(package_to_load_index)  # remove from temp eff. available packages
@@ -187,17 +188,19 @@ def find_next_package(available_packages, current_package):
 
     if current_package is None:
         current_package_address = HUB_address
+        print("current package is None!")
     else:
         current_package_address = current_package.address
 
     for this_package in available_packages:
         priority_heuristic = 1
         distance = distance_between(current_package_address, this_package.address)
+        print("the distance is " + str(distance))
 
         if this_package.delivery_deadline == "9:00 AM":
-            priority_heuristic = -2
+            priority_heuristic = .1
         if this_package.delivery_deadline == "10:30 AM":
-            priority_heuristic = -1
+            priority_heuristic = .5
 
         distance_priority = distance * priority_heuristic
 
@@ -209,6 +212,7 @@ def find_next_package(available_packages, current_package):
             this_package.set_priority(distance_priority)
             package_to_load_next = this_package
 
+    print("returning " + str(package_to_load_next))
     return package_to_load_next
 
 
@@ -258,6 +262,10 @@ num_packages = load_package_data('PackageFile.csv')
 
 print('number of packages is ' + str(num_packages))
 
+auto_load_truck(truck1)
+auto_load_truck(truck2)
+truck_deliver_packages(truck1)
+truck_deliver_packages(truck2)
 auto_load_truck(truck1)
 auto_load_truck(truck2)
 truck_deliver_packages(truck1)
