@@ -2,15 +2,16 @@ import datetime
 
 
 class Truck:
-    def __init__(self, name, max_packages=16, speed_mph=18, time=8):
+    def __init__(self, name, max_packages=16, speed_mph=18, hour_time=8, minute_time=0):
         self.name = name
         self.max_packages = max_packages
         self.speed_mph = speed_mph
         self.packages_on_board = []
         self.location = "Hub"
         self.miles_travelled = 0
-        self.clock = datetime.datetime(1990, 1, 1, time, 0, 0, 0)
+        self.clock = datetime.datetime(1990, 1, 1, hour_time, minute_time, 0, 0)     # this is useful, for having truck 2 leave at 9:05
         self.completed_trips = 0
+        self.num_high_priority_packages = 0
 
     def current_last_package(self):
         if self.packages_on_board:
