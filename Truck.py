@@ -24,7 +24,7 @@ class Truck:
         time_delta = datetime.timedelta(seconds=seconds_to_deliver_rounded)
         self.clock = self.clock + time_delta
         print('clock for ' + self.name + ' is now ' + str(self.clock))
-        return str(self.clock)
+        return self.clock.strftime("%H:%M")
 
     def increment_trip_count(self):
         self.completed_trips += 1
