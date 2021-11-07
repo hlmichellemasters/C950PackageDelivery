@@ -97,14 +97,15 @@ def find_next_package(available_packages, current_package=None):
     else:
         current_package_address = current_package.address
 
+    # print("printing all available packages at this time:")
+    #
+    #     print(this_package)
     for this_package in available_packages:
-        print(this_package)
+        priority_heuristic = 1
         if this_package.delivery_deadline == "9:00 AM":
             priority_heuristic = -2
-        elif this_package.delivery_deadline == "10:30 AM":
+        if this_package.delivery_deadline == "10:30 AM":
             priority_heuristic = -1
-        else:
-            priority_heuristic = 1
 
         distance_priority = distance_between(current_package_address, this_package.address) * priority_heuristic
 
@@ -149,7 +150,6 @@ print('number of packages available for truck 1 is ' + str(len(packages_for_truc
 
 # load truck 1
 auto_load_truck(truck1, 8, packages_for_truck_1)
-print("truck 1:")
 truck1.display_num_packages()
 updated_package_list = [package for package in package_list if package not in truck1.packages_on_board]
 print('Updated package list has ' + str(len(updated_package_list)) + ' packages')
@@ -165,34 +165,34 @@ packages_not_for_truck2 = []
 
 for package_id in package_ids_for_truck_2:                                      # finds the 10 packages
     packages_for_truck2.append(package_hashtable.find(package_id))              # and loads into a 'for' list
+print('Packages for truck2 size is: ' + str(len(packages_for_truck2)))
 
 for package_id in package_ids_not_for_truck_2:                                  # finds the 4 packages
     packages_not_for_truck2.append(package_hashtable.find(package_id))          # and loads into a 'not for' list
+print('Packages for not for truck2 size is: ' + str(len(packages_not_for_truck2)))
 
-# updates the "updated" package list by subtracting the 4 packages that can't go out yet.
+# updates the package list by subtracting the 4 packages that can't go out yet.
 updated_packages_for_truck2 = [package for package in updated_package_list if package not in packages_not_for_truck2]
+print('Updated packages without the 4 packages not for truck 2 is size: ' + str(len(updated_packages_for_truck2)))
 # updates the list to not include the 10 we will specifically load later.
 updated_packages_for_truck2 = [package for package in updated_packages_for_truck2 if package not in packages_for_truck2]
+print('Updated packages without the 10 packages will give to truck 2 later is size: ' + str(len(updated_packages_for_truck2)))
 
 # loads the 16 - 10 (6) highest priority packages into truck2 (available packages without the 10 selected for truck2
 auto_load_truck(truck2, (truck2.max_packages - len(package_ids_for_truck_2)), updated_packages_for_truck2)
-
-print("truck 2:")
+print("loaded 6 packages into truck2")
 truck2.display_num_packages()
 
 # updates the available package list to subtract the ones chosen for truck 2
 updated_package_list = [package for package in package_list if package not in truck2.packages_on_board]
-
 print('Updated package list has ' + str(len(updated_package_list)) + ' packages')
 
-
-
 auto_load_truck(truck2, len(package_ids_for_truck_2), packages_for_truck2)      #
-print("truck 2:")
 truck2.display_num_packages()
 
 updated_package_list.append(packages_not_for_truck2)                          #
-
+updated_package_list = [package for package in package_list if package not in truck2.packages_on_board]
+print('Before loading truck 3, Updated package list has ' + str(len(updated_package_list)) + ' packages')
 
 # display table so far
 # package_hashtable.display_table()

@@ -14,5 +14,5 @@ class Truck:
             return self.packages_on_board[len(self.packages_on_board) - 1]
 
     def display_num_packages(self):
-        print(self.name + " has " + str(len(self.packages_on_board)) + "packages on board")
+        print(self.name + " has " + str(len(self.packages_on_board)) + " packages on board")
 
