@@ -82,17 +82,12 @@ def distance_between(address1, address2):
 
 
 # function to load truck by package
-def load_truck(truck, selected_package):
-    global package_hashtable
-    print("total available packages are: ")
-    for package in total_available_package_list:
-        print(package)
+def load_truck(truck, package_id):
+    global package_hashtable, total_available_package_list
 
-    print("selected_package is " + str(print(selected_package)))
+    print("package id is " + str(package_id))
+    package_to_load = package_hashtable.find(package_id)  # copies package from hashtable to load truck by package ID
 
-    package_hashtable.display_table()
-    package_index = total_available_package_list.index(selected_package)  # gets index of package in the list
-    package_to_load = total_available_package_list.pop(package_index)  # removes package from list to load it
     print("package to load is: " + str(package_to_load))
     truck.packages_on_board.append(package_to_load)  # adds package to trucks list to deliver
     package_to_load.location = truck.name  # updates package location to truck (name)
@@ -135,8 +130,6 @@ def auto_load_truck(truck):
     if current_time < last_packages_available_time:  # if time before 9:05 AM can't deliver 6, (9?), 25, 28, 32
         effectively_available_package_list = [package for package in total_available_package_list if
                                               package not in packages_not_before_9]
-        # effectively_available_package_list = [package for package in effectively_available_package_list if
-        #                                       package not in packages_for_end_of_day]
 
     # for truck 1, going to go ahead and just load all of the packages that need to go together,
     # then the truck will be filled the rest of the way with the packages that are highest priority and available.
@@ -146,29 +139,29 @@ def auto_load_truck(truck):
         effectively_available_package_list = [package for package in effectively_available_package_list if
                                               package not in packages_only_truck2_2]
 
-    # # for truck 2, going to offer all of the "truck 2 only" packages, but not require truck 2 to take on first delivery
-    # if truck.name == 'truck2':
-    #     effectively_available_package_list = [package for package in effectively_available_package_list if
-    #                                           package not in packages_only_truck1]
-    #     print("effectively available packages for " + truck.name + " are: ")
-    #     for package in effectively_available_package_list:
-    #         print(package)
-    #     print("end of print")
+        print("effectively available packages for " + truck.name + " are: ")
+        for package in effectively_available_package_list:
+            print(package)
+        print("end of print")
 
     # finishes filling both trucks.
     while (len(truck.packages_on_board) < truck.max_packages) and effectively_available_package_list:
         print("truck's current last package is " + str(truck.current_last_package()))
         print("effectively available packages for " + truck.name + " are: ")
-        # for package in effectively_available_package_list:
-        #     print(package)
-        # print("end of print")
+        for package in effectively_available_package_list:
+            print(package)
+        print("end of print")
 
-        next_package_to_load = find_next_package(effectively_available_package_list, truck.current_last_package())
-        print("the next package to load is: " + str(next_package_to_load))
-        # print("next_package_to_load is " + str(next_package_to_load))
-        package_to_load_index = effectively_available_package_list.index(next_package_to_load)
-        effectively_available_package_list.pop(package_to_load_index)  # remove from temp eff. available packages
-        load_truck(truck, next_package_to_load)
+        next_package_id_to_load = find_next_package(effectively_available_package_list, truck.current_last_package())
+
+        print("the next package ID to load is index: " + str(next_package_id_to_load))
+
+        next_package_to_load = package_hashtable.find(next_package_id_to_load)
+        # remove_id_from_effective_list = effectively_available_package_list.index(next_package_to_load)
+        # effectively_available_package_list.pop(remove_id_from_effective_list)
+
+        load_truck(truck, next_package_id_to_load)
+
         if next_package_to_load.priority_heuristic < 0:
             truck.num_high_priority_packages += 1
 
@@ -184,7 +177,6 @@ def auto_load_truck(truck):
 # function to find the next package to load on a truck (loading in order to deliver in)
 def find_next_package(available_packages, current_package):
     min_distance_max_priority = inf
-    package_to_load_next = None
 
     if current_package is None:
         current_package_address = HUB_address
@@ -212,8 +204,9 @@ def find_next_package(available_packages, current_package):
             this_package.set_priority(distance_priority)
             package_to_load_next = this_package
 
-    print("returning " + str(package_to_load_next))
-    return package_to_load_next
+    package_id_to_load = package_to_load_next.id
+    print("'find next package' is returning package index: " + str(package_id_to_load))
+    return package_id_to_load
 
 
 def truck_deliver_packages(truck):
