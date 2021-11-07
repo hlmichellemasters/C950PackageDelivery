@@ -1,3 +1,5 @@
+import datetime
+
 from HashTable import HashTable
 from Package import Package
 from Truck import Truck
@@ -10,7 +12,7 @@ num_packages = None
 
 
 def load_package_data(package_data):
-    with open(package_data) as package_file:   # open(package_data) as package_file,
+    with open(package_data) as package_file:  # open(package_data) as package_file,
         package_reader = csv.DictReader(package_file)
         package_count = 0
 
@@ -68,11 +70,11 @@ def load_truck(truck, selected_package=None):
     if len(truck.packages_on_board) == truck.max_packages:
         return "Truck is too full to load any more packages"
     if selected_package:
-        package_index = package_list.index(selected_package)        # gets the index for the package in the package list
-        package_to_load = package_list.pop(package_index)           # removes the package form the list to load it
-        truck.packages_on_board.append(package_to_load)             # adds the package to the trucks list to deliver
+        package_index = package_list.index(selected_package)  # gets the index for the package in the package list
+        package_to_load = package_list.pop(package_index)  # removes the package form the list to load it
+        truck.packages_on_board.append(package_to_load)  # adds the package to the trucks list to deliver
         package_to_load.location = truck.name
-        package_hashtable.insert_or_update(package_to_load)         # updates the hash table that holds package info
+        package_hashtable.insert_or_update(package_to_load)  # updates the hash table that holds package info
 
 
 def auto_load_truck(truck, number_packages, available_package_list):
@@ -88,7 +90,6 @@ def auto_load_truck(truck, number_packages, available_package_list):
 
 # function to find the next package to load on a truck (loading in order to deliver in)
 def find_next_package(available_packages, current_package=None):
-
     min_distance_max_priority = inf
     package_to_load_next = None
 
@@ -115,6 +116,40 @@ def find_next_package(available_packages, current_package=None):
 
     return package_to_load_next
 
+
+def truck_deliver_packages(truck):
+    while truck.packages_on_board:
+        in_route_package = truck.packages_on_board.pop(0)
+        if truck.location == 'Hub':
+            truck_address = HUB_address
+        else:
+            truck_address = truck.location
+
+        distance_to_travel = distance_between(truck_address, in_route_package.address)
+        delivery_time = truck.get_new_time(distance_to_travel)
+        truck.location = in_route_package.address
+        in_route_package.location = 'Delivered'
+        in_route_package.time_delivered = delivery_time
+        package_delivered = in_route_package
+        package_hashtable.insert_or_update(package_delivered)
+
+    print(truck.name + ' delivered all of their packages')
+
+    truck_return_to_hub(truck)
+
+
+def truck_return_to_hub(truck):
+    if truck.location == 'Hub':
+        return
+    distance_to_travel = distance_between(truck.location, HUB_address)
+    truck.get_new_time(distance_to_travel)
+
+    if len(truck3.packages_on_board) > 0:
+        truck3.clock = truck.clock
+        truck_deliver_packages(truck3)
+        print("now deliverying truck 3 packages")
+
+# start main here:
 
 distance_data = load_distance_data('DistancesOnly.csv')
 
@@ -146,7 +181,7 @@ packages_for_truck_1 = []
 for package in package_list:
     if package.special_notes == '':
         packages_for_truck_1.append(package)
-print('number of packages available for truck 1 is ' + str(len(packages_for_truck_1)))     # should be 25?
+print('number of packages available for truck 1 is ' + str(len(packages_for_truck_1)))  # should be 25?
 
 # load truck 1
 auto_load_truck(truck1, 8, packages_for_truck_1)
@@ -158,17 +193,17 @@ print('Updated package list has ' + str(len(updated_package_list)) + ' packages'
 # first pick out the 9 that are reserved for truck2 from the available package list
 # then load the 7 non-selected packages (highest priority from available)
 
-package_ids_for_truck_2 = [3, 13, 14, 15, 16, 19, 20, 18, 36, 38]               # picks out the 10 selected for truck 2
-package_ids_not_for_truck_2 = [6, 25, 28, 32]                                   # picks out the 4 that can't leave yet
+package_ids_for_truck_2 = [3, 13, 14, 15, 16, 19, 20, 18, 36, 38]  # picks out the 10 selected for truck 2
+package_ids_not_for_truck_2 = [6, 25, 28, 32]  # picks out the 4 that can't leave yet
 packages_for_truck2 = []
 packages_not_for_truck2 = []
 
-for package_id in package_ids_for_truck_2:                                      # finds the 10 packages
-    packages_for_truck2.append(package_hashtable.find(package_id))              # and loads into a 'for' list
+for package_id in package_ids_for_truck_2:  # finds the 10 packages
+    packages_for_truck2.append(package_hashtable.find(package_id))  # and loads into a 'for' list
 print('Packages for truck2 size is: ' + str(len(packages_for_truck2)))
 
-for package_id in package_ids_not_for_truck_2:                                  # finds the 4 packages
-    packages_not_for_truck2.append(package_hashtable.find(package_id))          # and loads into a 'not for' list
+for package_id in package_ids_not_for_truck_2:  # finds the 4 packages
+    packages_not_for_truck2.append(package_hashtable.find(package_id))  # and loads into a 'not for' list
 print('Packages for not for truck2 size is: ' + str(len(packages_not_for_truck2)))
 
 # updates the package list by subtracting the 4 packages that can't go out yet.
@@ -176,7 +211,8 @@ updated_packages_for_truck2 = [package for package in updated_package_list if pa
 print('Updated packages without the 4 packages not for truck 2 is size: ' + str(len(updated_packages_for_truck2)))
 # updates the list to not include the 10 we will specifically load later.
 updated_packages_for_truck2 = [package for package in updated_packages_for_truck2 if package not in packages_for_truck2]
-print('Updated packages without the 10 packages will give to truck 2 later is size: ' + str(len(updated_packages_for_truck2)))
+print('Updated packages without the 10 packages will give to truck 2 later is size: ' + str(
+    len(updated_packages_for_truck2)))
 
 # loads the 16 - 10 (6) highest priority packages into truck2 (available packages without the 10 selected for truck2
 auto_load_truck(truck2, (truck2.max_packages - len(package_ids_for_truck_2)), updated_packages_for_truck2)
@@ -187,21 +223,30 @@ truck2.display_num_packages()
 updated_package_list = [package for package in package_list if package not in truck2.packages_on_board]
 print('Updated package list has ' + str(len(updated_package_list)) + ' packages')
 
-auto_load_truck(truck2, len(package_ids_for_truck_2), packages_for_truck2)      #
+auto_load_truck(truck2, len(package_ids_for_truck_2), packages_for_truck2)  #
 truck2.display_num_packages()
 
-updated_package_list.append(packages_not_for_truck2)                          #
+updated_package_list.append(packages_not_for_truck2)  #
 updated_package_list = [package for package in package_list if package not in truck2.packages_on_board]
 print('Before loading truck 3, Updated package list has ' + str(len(updated_package_list)) + ' packages')
-
-# display table so far
-# package_hashtable.display_table()
 
 # load truck 3 (for driver in truck 1 to take when they get back)
 auto_load_truck(truck3, 16, updated_package_list)
 updated_package_list = [package for package in package_list if package not in truck1.packages_on_board]
 print('Updated package list has ' + str(len(updated_package_list)) + ' packages')
+truck3.display_num_packages()
 # for each_package in truck2.packages_on_board:
 #     print(each_package)
+
+print(truck1.name + ' location: ' + truck1.location)
+print(truck2.name + ' location: ' + truck2.location)
+print(truck3.name + ' location: ' + truck3.location)
+
+truck_deliver_packages(truck1)
+truck_deliver_packages(truck2)
+# truck 3 is called to deliver by first trucks return
+
+# # # display table so far
+package_hashtable.display_table()
 
 
