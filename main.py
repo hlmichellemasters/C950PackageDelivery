@@ -5,7 +5,6 @@ from Package import Package
 from Truck import Truck
 from math import inf
 import csv
-import operator
 
 total_available_package_list = []
 package_hashtable = {}
@@ -35,7 +34,7 @@ def load_package_data(package_data):
 
         for line in package_reader:
             new_package = Package(line['package_ID'], line['address'], line['city'], line['state'],
-                                  line['zip_code'], line['delivery_deadline'], line['mass_kilo'],
+                                  line['zip_code'], line['region'], line['delivery_deadline'], line['mass_kilo'],
                                   line['special_notes'])
 
             package_count += 1
@@ -118,11 +117,11 @@ def auto_load_truck(truck):
     global total_available_package_list, current_time, last_packages_available_time
 
     package_ids_only_truck2 = [3, 18, 36, 38]
-    package_ids_only_truck1 = [13, 14, 15, 16, 19, 20]
+    package_ids_only_truck2_2 = [13, 14, 15, 16, 19, 20]
     package_ids_not_before_9 = [6, 9, 25, 28, 32]
 
     packages_only_truck2 = add_packages_to_list(package_ids_only_truck2)
-    packages_only_truck1 = add_packages_to_list(package_ids_only_truck1)
+    packages_only_truck2_2 = add_packages_to_list(package_ids_only_truck2_2)
     packages_not_before_9 = add_packages_to_list(package_ids_not_before_9)
 
     # packages_for_end_of_day = []
@@ -132,6 +131,8 @@ def auto_load_truck(truck):
 
     effectively_available_package_list = total_available_package_list
 
+    print(
+        "current time is " + str(current_time) + "last packages available time is " + str(last_packages_available_time))
     if current_time < last_packages_available_time:  # if time before 9:05 AM can't deliver 6, (9?), 25, 28, 32
         effectively_available_package_list = [package for package in total_available_package_list if
                                               package not in packages_not_before_9]
@@ -143,15 +144,17 @@ def auto_load_truck(truck):
     if truck.name == 'truck1':
         effectively_available_package_list = [package for package in effectively_available_package_list if
                                               package not in packages_only_truck2]
-
-    # for truck 2, going to offer all of the "truck 2 only" packages, but not require truck 2 to take on first delivery
-    if truck.name == 'truck2':
         effectively_available_package_list = [package for package in effectively_available_package_list if
-                                              package not in packages_only_truck1]
-        print("effectively available packages for " + truck.name + " are: ")
-        for package in effectively_available_package_list:
-            print(package)
-        print("end of print")
+                                              package not in packages_only_truck2_2]
+
+    # # for truck 2, going to offer all of the "truck 2 only" packages, but not require truck 2 to take on first delivery
+    # if truck.name == 'truck2':
+    #     effectively_available_package_list = [package for package in effectively_available_package_list if
+    #                                           package not in packages_only_truck1]
+    #     print("effectively available packages for " + truck.name + " are: ")
+    #     for package in effectively_available_package_list:
+    #         print(package)
+    #     print("end of print")
 
     # finishes filling both trucks.
     while (len(truck.packages_on_board) < truck.max_packages) and effectively_available_package_list:
@@ -168,11 +171,11 @@ def auto_load_truck(truck):
         if next_package_to_load.priority_heuristic < 0:
             truck.num_high_priority_packages += 1
 
-    reorder_packages(truck)
     print(truck.name + " is full with  " + str(len(truck.packages_on_board)) + " packages")
     print(truck.name + " has had " + str(truck.num_high_priority_packages) + " high priority packages")
     print('Total available packages is now ' + str(len(total_available_package_list)))
-    print("Here is a list and order of the packages in " + truck.name + " on delivery " + str(truck.completed_trips))
+    print(
+        "Here is a list and order of the packages in " + truck.name + " on delivery " + str(truck.completed_trips + 1))
     for package in truck.packages_on_board:
         print(package)
 
@@ -189,14 +192,19 @@ def find_next_package(available_packages, current_package):
 
     for this_package in available_packages:
         priority_heuristic = 1
+        distance = distance_between(current_package_address, this_package.address)
+
         if this_package.delivery_deadline == "9:00 AM":
             priority_heuristic = -2
         if this_package.delivery_deadline == "10:30 AM":
             priority_heuristic = -1
 
-        distance_priority = distance_between(current_package_address, this_package.address) * priority_heuristic
+        distance_priority = distance * priority_heuristic
 
-        if (float(distance_priority) < float(min_distance_max_priority)) and (float(distance_priority) != 0.0):
+        if distance == 0:
+            package_to_load_next = this_package
+
+        elif float(distance_priority) < float(min_distance_max_priority):
             min_distance_max_priority = distance_priority
             this_package.set_priority(distance_priority)
             package_to_load_next = this_package
@@ -204,24 +212,9 @@ def find_next_package(available_packages, current_package):
     return package_to_load_next
 
 
-def reorder_packages(truck):
-    truck.packages_on_board.sort(key=operator.attrgetter("priority_heuristic"))
-    # print("Now printing the order of the packages on board:")
-    # for package in truck.packages_on_board:
-    #     print(package)
-    # print("end of print")
-    print("Auto re-ordered packages before leaving the hub")
-
-
 def truck_deliver_packages(truck):
+    global total_mileage
     while truck.packages_on_board:
-        # global last_packages_available_time
-        # global returned_for_late_priority_packages
-
-        # if truck.clock >= last_packages_available_time and not returned_for_late_priority_packages:
-        #     truck_return_to_hub(truck)
-        #     print(truck.name + " clock says " + str(truck.clock))
-        #     returned_for_late_priority_packages = True
 
         in_route_package = truck.packages_on_board.pop(0)
 
@@ -231,7 +224,7 @@ def truck_deliver_packages(truck):
             truck_address = truck.location
 
         distance_to_travel = distance_between(truck_address, in_route_package.address)
-        global total_mileage
+
         total_mileage = total_mileage + distance_to_travel
         delivery_time = truck.get_new_time(distance_to_travel)
         truck.location = in_route_package.address
@@ -256,21 +249,6 @@ def truck_return_to_hub(truck):
     truck.increment_trip_count()
 
 
-def start_delivery():
-    global current_time, last_packages_available_time
-    while total_available_package_list:
-        auto_load_truck(truck1)
-        auto_load_truck(truck2)
-
-        truck_deliver_packages(truck1)
-        print("current time: " + str(current_time))
-        if current_time > last_packages_available_time:
-            truck_deliver_packages(truck2)
-
-        print(truck1.name + ' location: ' + truck1.location)
-        print(truck2.name + ' location: ' + truck2.location)
-
-
 # Main program begins
 distance_data = load_distance_data('DistancesOnly.csv')
 
@@ -280,9 +258,12 @@ num_packages = load_package_data('PackageFile.csv')
 
 print('number of packages is ' + str(num_packages))
 
-start_delivery()
+auto_load_truck(truck1)
+auto_load_truck(truck2)
+truck_deliver_packages(truck1)
+truck_deliver_packages(truck2)
 
-# # # display table so far
+# # # display table
 package_hashtable.display_table()
 print('Total mileage: ' + str(total_mileage))
 print('The time is now: ' + str(current_time))

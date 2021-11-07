@@ -70,5 +70,5 @@ class HashTable:
             collisions += 1                                        # increment collision number and continue while loop
 
     def display_table(self):
-        for x in range(1, self.array_size):
+        for x in range(1, self.array_size + 1):
             print((str(x)) + " " + str(self.find(x)))

@@ -1,5 +1,5 @@
 class Package:
-    def __init__(self, package_id, address, city, state, zip_code, delivery_deadline, mass_kg,
+    def __init__(self, package_id, address, city, state, zip_code, region, delivery_deadline, mass_kg,
                  special_notes):
 
         self.id = package_id
@@ -11,6 +11,7 @@ class Package:
         self.mass_kg = mass_kg
         self.special_notes = special_notes
         self.priority_heuristic = 0
+        self.region = region
         self.location = "Hub"
         self.time_delivered = "N/A"
 
