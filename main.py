@@ -123,6 +123,14 @@ def auto_load_truck(truck):
     packages_only_truck2_2 = add_packages_to_list(package_ids_only_truck2_2)
     packages_not_before_9 = add_packages_to_list(package_ids_not_before_9)
 
+    packages_north_central = []
+    packages_south_west = []
+    for package in total_available_package_list:
+        if package.region == "N" or package.region == "C":
+            packages_north_central.append(package)
+        else:
+            packages_south_west.append(package)
+
     effectively_available_package_list = total_available_package_list
 
     print("current time " + str(current_time) + "last packages available time is " + str(last_packages_available_time))
@@ -138,6 +146,8 @@ def auto_load_truck(truck):
                                               package not in packages_only_truck2]
         effectively_available_package_list = [package for package in effectively_available_package_list if
                                               package not in packages_only_truck2_2]
+        effectively_available_package_list = [package for package in effectively_available_package_list if
+                                              package not in packages_south_west]
 
         print("effectively available packages for " + truck.name + " are: ")
         for package in effectively_available_package_list:
@@ -159,11 +169,15 @@ def auto_load_truck(truck):
         load_truck(truck, next_package_id_to_load)
 
         next_package_to_load = package_hashtable.find(next_package_id_to_load)
-        # remove_id_from_effective_list = effectively_available_package_list.index(next_package_to_load)
-        # effectively_available_package_list.pop(remove_id_from_effective_list)
+        remove_id_from_effective_list = effectively_available_package_list.index(next_package_to_load)
+        effectively_available_package_list.pop(remove_id_from_effective_list)
 
         if next_package_to_load.priority_heuristic < 0:
             truck.num_high_priority_packages += 1
+
+    # update the total available packages list:
+    total_available_package_list = [package for package in total_available_package_list if package not in
+                                    truck.packages_on_board]
 
     print(truck.name + " is full with  " + str(len(truck.packages_on_board)) + " packages")
     print(truck.name + " has had " + str(truck.num_high_priority_packages) + " high priority packages")
@@ -263,9 +277,14 @@ auto_load_truck(truck1)
 auto_load_truck(truck2)
 truck_deliver_packages(truck1)
 truck_deliver_packages(truck2)
+auto_load_truck(truck1)
+auto_load_truck(truck2)
+truck_deliver_packages(truck1)
+truck_deliver_packages(truck2)
 
 # # # display table
 package_hashtable.display_table()
+print('Total packages left to deliver is: ' + str(len(total_available_package_list)))
 print('Total mileage: ' + str(total_mileage))
 print('The time is now: ' + str(current_time))
 print('truck1 made ' + str(truck1.completed_trips) + " trips")

@@ -14,26 +14,26 @@ class HashTable:
 
     def insert_or_update(self, package):                                 # to assign a value to the hash table,
         index = self.hash(package.id)                                    # find an index from hashing the key
-        print("the index is " + str(index) + " for package.id: " + str(package.id))
+        # print("the index is " + str(index) + " for package.id: " + str(package.id))
         hash_value = self.array[index]                                   # grab the value in that index.
-        if hash_value is not None:
-            print("hash_value[0] = " + str(hash_value[0]) + " and the calc. index is " + str(index))
-        else:
-            print("hash_value = " + str(hash_value) + " and the calc. index is " + str(index))
+        # if hash_value is not None:
+        #     # print("hash_value[0] = " + str(hash_value[0]) + " and the calc. index is " + str(index))
+        # else:
+        #     print("hash_value = " + str(hash_value) + " and the calc. index is " + str(index))
 
         if hash_value is None:                                        # if empty,
             self.array[index] = [index, package]                      # place new key-value pair
-            print("inserted into hashtable")
+            # print("inserted into hashtable")
             return
 
         if int(hash_value[0]) == int(index):                                       # if occupied with same key,
             self.array[index] = [index, package]                         # replace any current value with new value
-            print("updated hashtable")
+            # print("updated hashtable")
             return
 
         # if neither of two above options, then collision!
-        print("hash_value[0] = " + str(hash_value[0]) + " and the calc. index is " + str(index) +
-              " , collision for insert/update!")
+        # print("hash_value[0] = " + str(hash_value[0]) + " and the calc. index is " + str(index) +
+        #       " , collision for insert/update!")
         collision_number = 1
 
         while hash_value[0] != package.id:                               # while collisions continue,
@@ -61,17 +61,17 @@ class HashTable:
         # print("package found for that index is " + str(package_entry))
 
         if hash_value[1] is None:                                     # if none, then nothing to retrieve, return none.
-            print("hash table found None?!")
+            # print("hash table found None?!")
             return None
 
-        print("hashtable find() found hash_value[0]: " + str(hash_value[0]) + " for index: " + str(index))
+        # print("hashtable find() found hash_value[0]: " + str(hash_value[0]) + " for index: " + str(index))
         if int(hash_value[0]) == int(index):
             # if the value is the key
             return hash_value[1]                                   # return the key's value
 
         # if value is neither "none" nor key, then its a collision
         collisions = 1                                             # make collision counter --> 1
-        print("package.id: " + str(package_id) + " had a collision at index " + str(index))
+        # print("package.id: " + str(package_id) + " had a collision at index " + str(index))
 
         while (hash_value[0]) != int(index):                                   # while collisions continue,
             index = self.hash(package_id, collisions)                     # find new index using the id + collision (>0)

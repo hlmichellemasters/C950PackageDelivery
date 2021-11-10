@@ -25,7 +25,9 @@ class Package:
         self.time_delivered = time
 
     def __str__(self):
-        package_info = '{:5s} {:40s} {:10s} {:20s} {:10s} {:10s}'.format(self.id, self.address, self.delivery_deadline,
-                                                                         self.location, self.time_delivered,
-                                                                         self.special_notes)
+        package_info = '{:5s} {:40s} {:10s} {:20s} {:10s} {:10s} {:10s}'.format(self.id, self.address,
+                                                                                self.delivery_deadline,
+                                                                                self.location, self.region,
+                                                                                self.time_delivered,
+                                                                                self.special_notes)
         return package_info
