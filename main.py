@@ -14,6 +14,7 @@ total_mileage = 0
 start_time = datetime.datetime(1990, 1, 1, 8, 0, 0, 0)
 current_time = datetime.datetime(1990, 1, 1, 8, 0, 0, 0)
 last_packages_available_time = datetime.datetime(1990, 1, 1, 9, 5, 0, 0)
+high_priority_still = True
 returned_for_late_priority_packages = False
 truck1 = Truck('truck1')
 truck2 = Truck('truck2')
@@ -112,24 +113,36 @@ def add_packages_to_list(package_ids_to_add):
 # will create an "effectively" available list for each truck1 and truck2 for each return
 
 def auto_load_truck(truck):
-    global total_available_package_list, current_time, last_packages_available_time
+    global total_available_package_list, current_time, last_packages_available_time, high_priority_still
 
     print("loading: " + truck.name)
     package_ids_only_truck2 = [3, 18, 36, 38]
-    package_ids_only_truck2_2 = [13, 14, 15, 16, 19, 20]
+    package_ids_go_together = [13, 14, 15, 16, 19, 20]
     package_ids_not_before_9 = [6, 9, 25, 28, 32]
 
     packages_only_truck2 = add_packages_to_list(package_ids_only_truck2)
-    packages_only_truck2_2 = add_packages_to_list(package_ids_only_truck2_2)
+    packages_only_go_together = add_packages_to_list(package_ids_go_together)
     packages_not_before_9 = add_packages_to_list(package_ids_not_before_9)
 
     packages_north_central = []
     packages_south_west = []
+
     for package in total_available_package_list:
         if package.region == "N" or package.region == "C":
             packages_north_central.append(package)
         else:
             packages_south_west.append(package)
+
+    packages_high_priority = []
+    for package in total_available_package_list:
+        if package.delivery_deadline != "":
+            packages_high_priority.append(package)
+
+    # for package in packages_high_priority:
+    #     for another_package in total_available_package_list:
+    #         if package.address == another_package.address:
+    #             packages_high_priority.append(another_package)
+    #             print('found a low priority package with same address')
 
     effectively_available_package_list = total_available_package_list
 
@@ -138,42 +151,39 @@ def auto_load_truck(truck):
     if current_time < last_packages_available_time:  # if time before 9:05 AM can't deliver 6, (9?), 25, 28, 32
         effectively_available_package_list = [package for package in total_available_package_list if
                                               package not in packages_not_before_9]
+        effectively_available_package_list = [package for package in effectively_available_package_list if package in
+                                              packages_high_priority]
 
-    # for truck 1, going to go ahead and just load all of the packages that need to go together,
-    # then the truck will be filled the rest of the way with the packages that are highest priority and available.
+        print("the effective packages for delivery before 9:05am is: ")
+        for package in effectively_available_package_list:
+            print(package)
+
     if truck.name == 'truck1':
         effectively_available_package_list = [package for package in effectively_available_package_list if
                                               package not in packages_only_truck2]
         effectively_available_package_list = [package for package in effectively_available_package_list if
-                                              package not in packages_only_truck2_2]
+                                              package in packages_only_go_together]
         effectively_available_package_list = [package for package in effectively_available_package_list if
-                                              package not in packages_south_west]
+                                              package not in packages_north_central]
 
-        print("effectively available packages for " + truck.name + " are: ")
-        for package in effectively_available_package_list:
-            print(package)
-        print("end of print")
+    # determine whether there are still high priority packages to deliver
+    num_high_priority = 0
+    for package in effectively_available_package_list:
+        if package.delivery_deadline != "":
+            num_high_priority += 1
+    if num_high_priority == 0:
+        high_priority_still = False
 
     # finishes filling both trucks.
     while (len(truck.packages_on_board) < truck.max_packages) and effectively_available_package_list:
-        print("truck's current last package is " + str(truck.current_last_package()))
-        print("effectively available packages for " + truck.name + " are: ")
-        for package in effectively_available_package_list:
-            print(package)
-        print("end of print")
 
         next_package_id_to_load = find_next_package(effectively_available_package_list, truck.current_last_package())
-
-        print("the next package ID to load is index: " + str(next_package_id_to_load))
 
         load_truck(truck, next_package_id_to_load)
 
         next_package_to_load = package_hashtable.find(next_package_id_to_load)
         remove_id_from_effective_list = effectively_available_package_list.index(next_package_to_load)
         effectively_available_package_list.pop(remove_id_from_effective_list)
-
-        if next_package_to_load.priority_heuristic < 0:
-            truck.num_high_priority_packages += 1
 
     # update the total available packages list:
     total_available_package_list = [package for package in total_available_package_list if package not in
@@ -201,12 +211,11 @@ def find_next_package(available_packages, current_package):
     for this_package in available_packages:
         priority_heuristic = 1
         distance = distance_between(current_package_address, this_package.address)
-        print("the distance is " + str(distance))
 
         if this_package.delivery_deadline == "9:00 AM":
             priority_heuristic = .1
         if this_package.delivery_deadline == "10:30 AM":
-            priority_heuristic = .5
+            priority_heuristic = .3
 
         distance_priority = distance * priority_heuristic
 
@@ -219,7 +228,7 @@ def find_next_package(available_packages, current_package):
             package_to_load_next = this_package
 
     package_id_to_load = package_to_load_next.id
-    print("'find next package' is returning package index: " + str(package_id_to_load))
+
     return package_id_to_load
 
 
