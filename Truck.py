@@ -2,7 +2,7 @@ import datetime
 
 
 class Truck:
-    def __init__(self, name, max_packages=16, speed_mph=18, hour_time=8, minute_time=0):
+    def __init__(self, name, max_packages=6, speed_mph=18, hour_time=8, minute_time=0):
         self.name = name
         self.max_packages = max_packages
         self.speed_mph = speed_mph
@@ -30,6 +30,8 @@ class Truck:
     def increment_trip_count(self):
         self.completed_trips += 1
         print("incremented trip count for " + self.name)
+        self.max_packages = 16
+
 
 
 

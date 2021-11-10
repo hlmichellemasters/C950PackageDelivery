@@ -133,10 +133,10 @@ def auto_load_truck(truck):
         else:
             packages_south_west.append(package)
 
-    packages_high_priority = []
+    packages_not_priority = []
     for package in total_available_package_list:
-        if package.delivery_deadline != "":
-            packages_high_priority.append(package)
+        if package.delivery_deadline != "EOD":
+            packages_not_priority.append(package)
 
     # for package in packages_high_priority:
     #     for another_package in total_available_package_list:
@@ -151,8 +151,8 @@ def auto_load_truck(truck):
     if current_time < last_packages_available_time:  # if time before 9:05 AM can't deliver 6, (9?), 25, 28, 32
         effectively_available_package_list = [package for package in total_available_package_list if
                                               package not in packages_not_before_9]
-        effectively_available_package_list = [package for package in effectively_available_package_list if package in
-                                              packages_high_priority]
+        # effectively_available_package_list = [package for package in effectively_available_package_list if package not
+        #                                       in packages_not_priority]
 
         print("the effective packages for delivery before 9:05am is: ")
         for package in effectively_available_package_list:
@@ -162,7 +162,7 @@ def auto_load_truck(truck):
         effectively_available_package_list = [package for package in effectively_available_package_list if
                                               package not in packages_only_truck2]
         effectively_available_package_list = [package for package in effectively_available_package_list if
-                                              package in packages_only_go_together]
+                                              package not in packages_only_go_together]
         effectively_available_package_list = [package for package in effectively_available_package_list if
                                               package not in packages_north_central]
 
