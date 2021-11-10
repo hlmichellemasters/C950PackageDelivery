@@ -156,11 +156,11 @@ def auto_load_truck(truck):
 
         print("the next package ID to load is index: " + str(next_package_id_to_load))
 
+        load_truck(truck, next_package_id_to_load)
+
         next_package_to_load = package_hashtable.find(next_package_id_to_load)
         # remove_id_from_effective_list = effectively_available_package_list.index(next_package_to_load)
         # effectively_available_package_list.pop(remove_id_from_effective_list)
-
-        load_truck(truck, next_package_id_to_load)
 
         if next_package_to_load.priority_heuristic < 0:
             truck.num_high_priority_packages += 1
