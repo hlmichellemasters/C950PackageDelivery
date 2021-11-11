@@ -2,7 +2,7 @@ import datetime
 
 
 class Truck:
-    def __init__(self, name, max_packages=6, speed_mph=18, hour_time=8, minute_time=0):
+    def __init__(self, name, max_packages=7, speed_mph=18, hour_time=8, minute_time=0):
         self.name = name
         self.max_packages = max_packages
         self.speed_mph = speed_mph

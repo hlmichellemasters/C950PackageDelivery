@@ -24,6 +24,12 @@ class Package:
         self.location = "delivered"
         self.time_delivered = time
 
+    def update_address(self, address, city, state, zip_code):
+        self.address = address
+        self.city = city
+        self.state = state
+        self.zip_code = zip_code
+
     def __str__(self):
         package_info = '{:5s} {:40s} {:10s} {:20s} {:10s} {:10s} {:10s}'.format(self.id, self.address,
                                                                                 self.delivery_deadline,

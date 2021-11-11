@@ -14,6 +14,7 @@ total_mileage = 0
 start_time = datetime.datetime(1990, 1, 1, 8, 0, 0, 0)
 current_time = datetime.datetime(1990, 1, 1, 8, 0, 0, 0)
 last_packages_available_time = datetime.datetime(1990, 1, 1, 9, 5, 0, 0)
+package_9_address_correction_time = datetime.datetime(1990, 1, 1, 10, 20, 0, 0)
 high_priority_still = True
 returned_for_late_priority_packages = False
 truck1 = Truck('truck1')
@@ -118,11 +119,13 @@ def auto_load_truck(truck):
     print("loading: " + truck.name)
     package_ids_only_truck2 = [3, 18, 36, 38]
     package_ids_go_together = [13, 14, 15, 16, 19, 20]
-    package_ids_not_before_9 = [6, 9, 25, 28, 32]
+    package_ids_not_before_9 = [6, 25, 28, 32]
+    package_ids_not_before_10 = [9]
 
     packages_only_truck2 = add_packages_to_list(package_ids_only_truck2)
     packages_only_go_together = add_packages_to_list(package_ids_go_together)
     packages_not_before_9 = add_packages_to_list(package_ids_not_before_9)
+    packages_not_before_10 = add_packages_to_list(package_ids_not_before_10)
 
     packages_north_central = []
     packages_south_west = []
@@ -147,12 +150,13 @@ def auto_load_truck(truck):
     effectively_available_package_list = total_available_package_list
 
     print("current time " + str(current_time) + "last packages available time is " + str(last_packages_available_time))
-
-    if current_time < last_packages_available_time:  # if time before 9:05 AM can't deliver 6, (9?), 25, 28, 32
+    if current_time < package_9_address_correction_time:
         effectively_available_package_list = [package for package in total_available_package_list if
-                                              package not in packages_not_before_9]
-        # effectively_available_package_list = [package for package in effectively_available_package_list if package not
-        #                                       in packages_not_priority]
+                                              package not in packages_not_before_10]
+
+        if current_time < last_packages_available_time:  # if time before 9:05 AM can't deliver 6, (9?), 25, 28, 32
+            effectively_available_package_list = [package for package in effectively_available_package_list if
+                                                  package not in packages_not_before_9]
 
         print("the effective packages for delivery before 9:05am is: ")
         for package in effectively_available_package_list:
@@ -176,7 +180,6 @@ def auto_load_truck(truck):
 
     # finishes filling both trucks.
     while (len(truck.packages_on_board) < truck.max_packages) and effectively_available_package_list:
-
         next_package_id_to_load = find_next_package(effectively_available_package_list, truck.current_last_package())
 
         load_truck(truck, next_package_id_to_load)
@@ -233,7 +236,7 @@ def find_next_package(available_packages, current_package):
 
 
 def truck_deliver_packages(truck):
-    global total_mileage
+    global total_mileage, package_9_address_correction_time
     while truck.packages_on_board:
 
         in_route_package = truck.packages_on_board.pop(0)
@@ -242,6 +245,16 @@ def truck_deliver_packages(truck):
             truck_address = HUB_address
         else:
             truck_address = truck.location
+
+        # #9 address will be corrected to 410 S State St., Salt Lake City, UT 84111 at 10:20am
+        if int(in_route_package.id) == 9 and truck.clock < package_9_address_correction_time:
+            truck.packages_on_board.append(in_route_package)
+            if len(truck.packages_on_board) > 1:
+                continue
+            else:
+                truck_return_to_hub(truck)
+        if int(in_route_package.id) == 9 and truck.clock > package_9_address_correction_time:
+            in_route_package.update_address("410 S State St", "Salt Lake City", "UT", "84111")
 
         distance_to_travel = distance_between(truck_address, in_route_package.address)
 
