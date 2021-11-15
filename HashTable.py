@@ -88,4 +88,4 @@ class HashTable:
 
     def display_table(self):
         for x in range(self.array_size):
-            print((str(x)) + " " + str(self.find(x)))
+            print(str(self.find(x)))

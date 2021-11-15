@@ -1,5 +1,7 @@
 import datetime
 
+HUB_address = "4001 South 700 East"
+
 
 class Truck:
     def __init__(self, name, max_packages=7, speed_mph=18, hour_time=8, minute_time=0):
@@ -9,7 +11,7 @@ class Truck:
         self.packages_on_board = []
         self.location = "Hub"
         self.miles_travelled = 0
-        self.clock = datetime.datetime(1990, 1, 1, hour_time, minute_time, 0, 0)     # this is useful, for having truck 2 leave at 9:05
+        self.clock = datetime.datetime(1990, 1, 1, hour_time, minute_time, 0, 0)
         self.completed_trips = 0
         self.num_high_priority_packages = 0
 
@@ -31,6 +33,13 @@ class Truck:
         self.completed_trips += 1
         print("incremented trip count for " + self.name)
         self.max_packages = 16
+
+    def return_to_hub(self, distance_to_travel):
+        if self.location == 'Hub':
+            return
+        self.get_new_time(distance_to_travel)
+        self.increment_trip_count()
+
 
 
 

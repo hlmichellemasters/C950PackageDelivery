@@ -1,78 +1,80 @@
+# Heaven-Leigh Michelle Masters
+# Student ID: 001328444
+#
 import datetime
-
-from HashTable import HashTable
-from Package import Package
+import copy
+import DataLoader
 from Truck import Truck
 from math import inf
-import csv
 
-total_available_package_list = []
-package_hashtable = {}
+# holds the HUB's address
 HUB_address = "4001 South 700 East"
-num_packages = None
+
+# # initiator of number of packages
+# num_packages = None
+
+# initiator of the total mileage driven
 total_mileage = 0
+
+# delivery start time
 start_time = datetime.datetime(1990, 1, 1, 8, 0, 0, 0)
+
+# initiator of current time
 current_time = datetime.datetime(1990, 1, 1, 8, 0, 0, 0)
+
+# time that the late packages are available to be picked up
 last_packages_available_time = datetime.datetime(1990, 1, 1, 9, 5, 0, 0)
+
+# time that package 9's address correction will occur
 package_9_address_correction_time = datetime.datetime(1990, 1, 1, 10, 20, 0, 0)
-high_priority_still = True
-returned_for_late_priority_packages = False
+# address that package 9 will be corrected to:
+package_9_correct_address = ["410 S State St", "Salt Lake City", "UT", "84111"]
+
+# initiator of the timestamp dictionary
+timestamps = {}
+
+# initiators of the effectively 2 trucks
 truck1 = Truck('truck1')
 truck2 = Truck('truck2')
 
 
-def update_time_check_print(truck_time):
-    global package_hashtable, current_time
+# updates the current time with truck time (if ahead) and takes a snapshot of the package hash table at the current time
+def timestamp(truck_time):
+    global current_time
+
     if truck_time > current_time:
         current_time = truck_time
-    print("The time is now: " + str(current_time))
 
-
-def load_package_data(package_data):
-    global total_available_package_list, package_hashtable
-    with open(package_data) as package_file:  # open(package_data) as package_file,
-        package_reader = csv.DictReader(package_file)
-        package_count = 0
-
-        for line in package_reader:
-            new_package = Package(line['package_ID'], line['address'], line['city'], line['state'],
-                                  line['zip_code'], line['region'], line['delivery_deadline'], line['mass_kilo'],
-                                  line['special_notes'])
-
-            package_count += 1
-            total_available_package_list.append(new_package)
-
-    # create package hash table and insert all the packages
-    package_hashtable = HashTable(package_count)
-    for this_package in total_available_package_list:
-        package_hashtable.insert_or_update(this_package)
-
+    time_string = "" + str(current_time.hour) + ":" + str(current_time.minute)
+    current_package_info = copy.deepcopy(package_hashtable)
+    print("The time is now: " + time_string + " saved the package hash table info for this time")
+    timestamps[time_string] = current_package_info
+    print("key is " + time_string + " and the packageHashTable is:")
     package_hashtable.display_table()
 
-    return package_count
 
+def display_timestamp(hour, minute):
+    hr = hour
+    min = minute
+    time_key = "" + str(hr) + ":" + str(min)
+    found_timestamp = False
+    while not found_timestamp:
+        packages_info_at_that_time = timestamps.get(time_key)
+        if packages_info_at_that_time is None:
+            print("didn't find that exact time")
+            if min > 0:
+                min = min - 1
+            else:
+                hr = hr - 1
+                min = 59
+            time_key = ("" + str(hr) + ":" + str(min))
+            print("current time_key is " + time_key)
+        else:
+            found_timestamp = True
+            packages_info_at_that_time.display_table()
 
-# get the distances between all the locations
-def load_distance_data(file):
-    distance_list = []  # Define list "distance_data"
-    with open(file) as distance_file:
-        reader = csv.reader(distance_file)
-
-        for line in reader:
-            distance_list.append(line)
-
-    return distance_list
-
-
-def load_address_data(file):
-    with open(file) as address_file:
-        address_list = []
-        reader = csv.reader(address_file)
-
-        for line in reader:
-            address_list = line
-
-        return address_list
+    print("subtracted one minute to look again")
+    print("found_timestamp is : " + str(found_timestamp))
 
 
 def distance_between(address1, address2):
@@ -92,7 +94,7 @@ def load_truck(truck, package_id):
 
     print("package to load is: " + str(package_to_load))
     truck.packages_on_board.append(package_to_load)  # adds package to trucks list to deliver
-    package_to_load.location = truck.name  # updates package location to truck (name)
+    package_to_load.delivery_status = "enroute with + " + truck.name  # updates package location to truck (name)
     package_hashtable.insert_or_update(package_to_load)  # updates hash table that holds package info
 
 
@@ -114,7 +116,7 @@ def add_packages_to_list(package_ids_to_add):
 # will create an "effectively" available list for each truck1 and truck2 for each return
 
 def auto_load_truck(truck):
-    global total_available_package_list, current_time, last_packages_available_time, high_priority_still
+    global total_available_package_list, current_time, last_packages_available_time
 
     print("loading: " + truck.name)
     package_ids_only_truck2 = [3, 18, 36, 38]
@@ -141,12 +143,6 @@ def auto_load_truck(truck):
         if package.delivery_deadline != "EOD":
             packages_not_priority.append(package)
 
-    # for package in packages_high_priority:
-    #     for another_package in total_available_package_list:
-    #         if package.address == another_package.address:
-    #             packages_high_priority.append(another_package)
-    #             print('found a low priority package with same address')
-
     effectively_available_package_list = total_available_package_list
 
     print("current time " + str(current_time) + "last packages available time is " + str(last_packages_available_time))
@@ -169,14 +165,6 @@ def auto_load_truck(truck):
                                               package not in packages_only_go_together]
         effectively_available_package_list = [package for package in effectively_available_package_list if
                                               package not in packages_north_central]
-
-    # determine whether there are still high priority packages to deliver
-    num_high_priority = 0
-    for package in effectively_available_package_list:
-        if package.delivery_deadline != "":
-            num_high_priority += 1
-    if num_high_priority == 0:
-        high_priority_still = False
 
     # finishes filling both trucks.
     while (len(truck.packages_on_board) < truck.max_packages) and effectively_available_package_list:
@@ -248,66 +236,98 @@ def truck_deliver_packages(truck):
 
         # #9 address will be corrected to 410 S State St., Salt Lake City, UT 84111 at 10:20am
         if int(in_route_package.id) == 9 and truck.clock < package_9_address_correction_time:
+            # so if the current package is #9 and its before the correction time,
+            # append the package on to the packages on board of the truck (adds to end of truck's delivery list)
             truck.packages_on_board.append(in_route_package)
+            # if there is more than 1 package on board, continue delivering
             if len(truck.packages_on_board) > 1:
                 continue
+            # otherwise return to the hub to get more packages
             else:
-                truck_return_to_hub(truck)
-        if int(in_route_package.id) == 9 and truck.clock > package_9_address_correction_time:
-            in_route_package.update_address("410 S State St", "Salt Lake City", "UT", "84111")
+                truck.return_to_hub(distance_to_travel)
 
+        if int(in_route_package.id) == 9 and truck.clock > package_9_address_correction_time:
+            # if current package is #9 and its past the correction time,
+            # then update the packages address
+            in_route_package.update_address(package_9_correct_address)
+
+        # find the distance between the truck's current location adn the package's destination address
         distance_to_travel = distance_between(truck_address, in_route_package.address)
 
+        # increment the total mileage for the day with that distance
         total_mileage = total_mileage + distance_to_travel
+        # find the delivery time of the package by updating the truck's clock with the distance travelled
         delivery_time = truck.get_new_time(distance_to_travel)
+        # update the truck's location to the that package's address
         truck.location = in_route_package.address
-        in_route_package.location = 'Delivered by ' + str(truck.name)
-        in_route_package.time_delivered = delivery_time
+        # update the delivery status of the package
+        in_route_package.delivery_status = 'Delivered by ' + str(truck.name) + " at " + str(delivery_time)
+        # call this package the delivered package now
         package_delivered = in_route_package
+        # and update the hashtable for that package
         package_hashtable.insert_or_update(package_delivered)
-        update_time_check_print(truck.clock)
+        # take a timestamp of the packages information at that time, to use for looking up timestamps later
+        timestamp(truck.clock)
 
     print(truck.name + ' delivered all of their packages')
 
-    truck_return_to_hub(truck)
-
-
-def truck_return_to_hub(truck):
-    if truck.location == 'Hub':
-        return
+    # when truck is empty, update the total mileage with the miles required to return to hub
     distance_to_travel = distance_between(truck.location, HUB_address)
-    global total_mileage
+    # return the truck to the hub
+    truck.return_to_hub(distance_to_travel)
+    # update the total mileage for the day with that distance as well
     total_mileage = total_mileage + distance_to_travel
-    truck.get_new_time(distance_to_travel)
-    truck.increment_trip_count()
 
 
-# Main program begins
-distance_data = load_distance_data('DistancesOnly.csv')
+# # # Main program
 
-address_data = load_address_data('AddressesOnly.csv')
+# load the distance data (a table which holds the distances between each address)
+distance_data = DataLoader.load_distance_data('DistancesOnly.csv')
 
-num_packages = load_package_data('PackageFile.csv')
+# load the address data (a list which shows the index for each address in the distance data)
+address_data = DataLoader.load_address_data('AddressesOnly.csv')
 
-print('number of packages is ' + str(num_packages))
+# load the package data (and also import the number of packages, a list of all the packages, and the hashtable of them
+num_packages, total_available_package_list, package_hashtable = DataLoader.load_package_data('PackageFile.csv')
 
-auto_load_truck(truck1)
-auto_load_truck(truck2)
-truck_deliver_packages(truck1)
-truck_deliver_packages(truck2)
-auto_load_truck(truck1)
-auto_load_truck(truck2)
-truck_deliver_packages(truck1)
-truck_deliver_packages(truck2)
-auto_load_truck(truck1)
-auto_load_truck(truck2)
-truck_deliver_packages(truck1)
-truck_deliver_packages(truck2)
+# take a starting timestamp of the package information
+timestamp(start_time)
 
+# while there are still packages to deliver, keep loading and delivering each truck
+while total_available_package_list:
+    auto_load_truck(truck1)
+    auto_load_truck(truck2)
+    truck_deliver_packages(truck1)
+    truck_deliver_packages(truck2)
+
+# take a final timestamp for the end of the day
+end_time = current_time
+timestamp(end_time)
 # # # display table
 package_hashtable.display_table()
 print('Total packages left to deliver is: ' + str(len(total_available_package_list)))
 print('Total mileage: ' + str(total_mileage))
-print('The time is now: ' + str(current_time))
+print('The time is now: ' + str(end_time))
 print('truck1 made ' + str(truck1.completed_trips) + " trips")
 print('truck2 made ' + str(truck2.completed_trips) + " trips")
+
+test_info_at_that_time = timestamps.get("8:0")
+print("displaying test table")
+test_info_at_that_time.display_table()
+# # # command line interface
+
+print("****** Welcome to the Western Governors University Package Service! ******\n\n")
+print("The day started at 8:00 am (or 8 hours and 0 minutes)")
+print("The deliveries were done at " + str(end_time))
+print("I can show you the statuses of all the packages at any given time during the delivery day")
+print("Press any non-number (such as a letter) to exit the program")
+
+while True:
+    try:
+        hour = int(input("What hour would you like to look at a timestamp of the packages for?"))
+        minute = int(input("What minute would you like to look at a timestamp of the packages for?"))
+        display_timestamp(hour, minute)
+    except ValueError:
+        print("You entered a non-number, now exiting the program")
+        exit()
+
