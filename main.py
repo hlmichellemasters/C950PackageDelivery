@@ -47,34 +47,26 @@ def timestamp(truck_time):
 
     time_string = "" + str(current_time.hour) + ":" + str(current_time.minute)
     current_package_info = copy.deepcopy(package_hashtable)
-    print("The time is now: " + time_string + " saved the package hash table info for this time")
     timestamps[time_string] = current_package_info
-    print("key is " + time_string + " and the packageHashTable is:")
-    package_hashtable.display_table()
 
 
-def display_timestamp(hour, minute):
-    hr = hour
-    min = minute
-    time_key = "" + str(hr) + ":" + str(min)
+def display_timestamp(hours, minutes):
+    hr = hours
+    mins = minutes
+    time_key = "" + str(hr) + ":" + str(mins)
     found_timestamp = False
     while not found_timestamp:
         packages_info_at_that_time = timestamps.get(time_key)
         if packages_info_at_that_time is None:
-            print("didn't find that exact time")
-            if min > 0:
-                min = min - 1
+            if mins > 0:
+                mins = mins - 1
             else:
                 hr = hr - 1
-                min = 59
-            time_key = ("" + str(hr) + ":" + str(min))
-            print("current time_key is " + time_key)
+                mins = 59
+            time_key = ("" + str(hr) + ":" + str(mins))
         else:
             found_timestamp = True
             packages_info_at_that_time.display_table()
-
-    print("subtracted one minute to look again")
-    print("found_timestamp is : " + str(found_timestamp))
 
 
 def distance_between(address1, address2):
@@ -89,10 +81,8 @@ def distance_between(address1, address2):
 def load_truck(truck, package_id):
     global package_hashtable, total_available_package_list
 
-    print("package id is " + str(package_id))
     package_to_load = package_hashtable.find(package_id)  # copies package from hashtable to load truck by package ID
 
-    print("package to load is: " + str(package_to_load))
     truck.packages_on_board.append(package_to_load)  # adds package to trucks list to deliver
     package_to_load.delivery_status = "enroute with + " + truck.name  # updates package location to truck (name)
     package_hashtable.insert_or_update(package_to_load)  # updates hash table that holds package info
@@ -109,62 +99,80 @@ def add_packages_to_list(package_ids_to_add):
 
 # STRATEGY:
 # 1) packages 13 (<10:30am), 14 (<10:30AM), 15 (<9:00 AM), 16 (<10:30AM), 19 (EOD) and 20 (<10:30AM)
-#                              must all go together (putting on truck 1?)
+#                              must all go together (putting on truck 2)
 # 2) packages 3 (EOD), 18 (EOD), 36 (EOD), and 38 (EOD) must go on truck2
 # 3) packages 6, 25, 28, and 32 cannot leave the hub before 9:05 a.m. and #9 cannot be delivered until > 10:20 AM)
 #          (6 and 25 due < 10:30 AM)
-# will create an "effectively" available list for each truck1 and truck2 for each return
+# 4) Also sorting based on overall region assigned (North, West, Central, South), with N and C going on truck 2
 
+# will create an "effectively" available list for each truck1 and truck2 for each return
 def auto_load_truck(truck):
     global total_available_package_list, current_time, last_packages_available_time
 
-    print("loading: " + truck.name)
+    # assign special packages to lists
     package_ids_only_truck2 = [3, 18, 36, 38]
     package_ids_go_together = [13, 14, 15, 16, 19, 20]
     package_ids_not_before_9 = [6, 25, 28, 32]
     package_ids_not_before_10 = [9]
 
+    # create lists of those packages to use for building an effectively available list for each truck
     packages_only_truck2 = add_packages_to_list(package_ids_only_truck2)
     packages_only_go_together = add_packages_to_list(package_ids_go_together)
     packages_not_before_9 = add_packages_to_list(package_ids_not_before_9)
     packages_not_before_10 = add_packages_to_list(package_ids_not_before_10)
 
-    packages_north_central = []
-    packages_south_west = []
+    # including the regions
+    packages_north = []
+    packages_central = []
+    packages_south = []
+    packages_west = []
 
     for package in total_available_package_list:
-        if package.region == "N" or package.region == "C":
-            packages_north_central.append(package)
+        if package.region == "N":
+            packages_north.append(package)
+        elif package.region == "C":
+            packages_central.append(package)
+        elif package.region == "S":
+            packages_south.append(package)
         else:
-            packages_south_west.append(package)
+            packages_west.append(package)
 
-    packages_not_priority = []
-    for package in total_available_package_list:
-        if package.delivery_deadline != "EOD":
-            packages_not_priority.append(package)
-
+    # start with all the total packages (that aren't delivered yet)
     effectively_available_package_list = total_available_package_list
 
-    print("current time " + str(current_time) + "last packages available time is " + str(last_packages_available_time))
+    # if it is before the package 9 correction time (10:20)
     if current_time < package_9_address_correction_time:
+        # subtract package 9 (or all the packages that shouldn't leave before 10am)
         effectively_available_package_list = [package for package in total_available_package_list if
                                               package not in packages_not_before_10]
 
-        if current_time < last_packages_available_time:  # if time before 9:05 AM can't deliver 6, (9?), 25, 28, 32
+        # if it is also before 9:05 am
+        if current_time < last_packages_available_time:
+            # subtract the packages that don't arrive before 9:05 am
             effectively_available_package_list = [package for package in effectively_available_package_list if
                                                   package not in packages_not_before_9]
 
-        print("the effective packages for delivery before 9:05am is: ")
-        for package in effectively_available_package_list:
-            print(package)
-
+    # through trial and error decided truck 1 will have the least options and stay the closest
+    # making truck 2 have the furthest packages and also have to take the most
+    # (when extending this program, would include the many trial-and-error options as a search for the most
+    # efficient strategy).
     if truck.name == 'truck1':
+        # subtract packages that can only go on truck 2
         effectively_available_package_list = [package for package in effectively_available_package_list if
                                               package not in packages_only_truck2]
+        # subtract packages that all need to go together
         effectively_available_package_list = [package for package in effectively_available_package_list if
                                               package not in packages_only_go_together]
+
+        # # subtract the packages that are furthest regions away
         effectively_available_package_list = [package for package in effectively_available_package_list if
-                                              package not in packages_north_central]
+                                              package not in packages_north]
+
+        effectively_available_package_list = [package for package in effectively_available_package_list if
+                                              package not in packages_west]
+
+        effectively_available_package_list = [package for package in effectively_available_package_list if
+                                              package not in packages_south]
 
     # finishes filling both trucks.
     while (len(truck.packages_on_board) < truck.max_packages) and effectively_available_package_list:
@@ -184,7 +192,8 @@ def auto_load_truck(truck):
     print(truck.name + " has had " + str(truck.num_high_priority_packages) + " high priority packages")
     print('Total available packages is now ' + str(len(total_available_package_list)))
     print(
-        "Here is a list and order of the packages in " + truck.name + " on delivery " + str(truck.completed_trips + 1))
+        "Here is a list and order of the packages in " + truck.name + " on delivery " + str(truck.completed_trips + 1) +
+        " at " + str(current_time))
     for package in truck.packages_on_board:
         print(package)
 
@@ -203,10 +212,13 @@ def find_next_package(available_packages, current_package):
         priority_heuristic = 1
         distance = distance_between(current_package_address, this_package.address)
 
+        # this gets me 142 miles, but 6 is late
         if this_package.delivery_deadline == "9:00 AM":
+            priority_heuristic = .05
+        elif "Must be delivered with" in this_package.special_notes:
             priority_heuristic = .1
-        if this_package.delivery_deadline == "10:30 AM":
-            priority_heuristic = .3
+        elif this_package.delivery_deadline == "10:30 AM":
+            priority_heuristic = .2
 
         distance_priority = distance * priority_heuristic
 
@@ -311,23 +323,19 @@ print('The time is now: ' + str(end_time))
 print('truck1 made ' + str(truck1.completed_trips) + " trips")
 print('truck2 made ' + str(truck2.completed_trips) + " trips")
 
-test_info_at_that_time = timestamps.get("8:0")
-print("displaying test table")
-test_info_at_that_time.display_table()
 # # # command line interface
 
-print("****** Welcome to the Western Governors University Package Service! ******\n\n")
-print("The day started at 8:00 am (or 8 hours and 0 minutes)")
-print("The deliveries were done at " + str(end_time))
-print("I can show you the statuses of all the packages at any given time during the delivery day")
-print("Press any non-number (such as a letter) to exit the program")
+# print("****** Welcome to the Western Governors University Package Service! ******\n\n")
+# print("The day started at 8:00 am (or 8 hours and 0 minutes)")
+# print("The deliveries were done at " + str(end_time))
+# print("I can show you the statuses of all the packages at any given time during the delivery day")
+# print("Press any non-number (such as a letter) to exit the program")
 
-while True:
-    try:
-        hour = int(input("What hour would you like to look at a timestamp of the packages for?"))
-        minute = int(input("What minute would you like to look at a timestamp of the packages for?"))
-        display_timestamp(hour, minute)
-    except ValueError:
-        print("You entered a non-number, now exiting the program")
-        exit()
-
+# while True:
+#     try:
+#         hour = int(input("What hour would you like to look at a timestamp of the packages for?"))
+#         minute = int(input("What minute would you like to look at a timestamp of the packages for?"))
+#         display_timestamp(hour, minute)
+#     except ValueError:
+#         print("You entered a non-number, now exiting the program")
+#         exit()

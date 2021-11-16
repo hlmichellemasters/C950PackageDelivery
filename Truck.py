@@ -4,7 +4,7 @@ HUB_address = "4001 South 700 East"
 
 
 class Truck:
-    def __init__(self, name, max_packages=7, speed_mph=18, hour_time=8, minute_time=0):
+    def __init__(self, name, max_packages=16, speed_mph=18, hour_time=8, minute_time=0):
         self.name = name
         self.max_packages = max_packages
         self.speed_mph = speed_mph
@@ -26,7 +26,6 @@ class Truck:
         seconds_to_deliver_rounded = int((distance_to_travel / 18) * 3600)
         time_delta = datetime.timedelta(seconds=seconds_to_deliver_rounded)
         self.clock = self.clock + time_delta
-        print('clock for ' + self.name + ' is now ' + str(self.clock))
         return self.clock.strftime("%H:%M")
 
     def increment_trip_count(self):

@@ -30,9 +30,12 @@ class Package:
         self.zip_code = corrected_address[3]
 
     def __str__(self):
-        package_info = '{:3s} {:38s} {:9s} {:16s} {:6s} {:3s} {:20s} {:20s}'.format(self.id, self.address,
-                                                                                    self.delivery_deadline, self.city,
-                                                                                    self.zip_code, self.mass_kg,
-                                                                                    self.delivery_status,
-                                                                                    self.special_notes)
+        package_info = '{:3s} {:38s} {:9s} {:3s} {:3s} {:15s} {:20s}'.format(self.id, self.address,
+                                                                             self.delivery_deadline,
+                                                                             # self.city,
+                                                                             # self.zip_code, self.mass_kg,
+                                                                             str("%.2f" % self.priority_heuristic),
+                                                                             self.region,
+                                                                             self.delivery_status,
+                                                                             self.special_notes)
         return package_info
