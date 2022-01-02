@@ -192,15 +192,6 @@ def auto_load_truck(truck):
     total_available_package_list = [package for package in total_available_package_list if package not in
                                     truck.packages_on_board]
 
-    print(truck.name + " is full with  " + str(len(truck.packages_on_board)) + " packages")
-    print(truck.name + " has had " + str(truck.num_high_priority_packages) + " high priority packages")
-    print('Total available packages is now ' + str(len(total_available_package_list)))
-    print(
-        "Here is a list and order of the packages in " + truck.name + " on delivery " + str(truck.completed_trips + 1) +
-        " at " + str(current_time))
-    for package in truck.packages_on_board:
-        print(package)
-
 
 # function to find the next package to load on a truck (loading in order to deliver in)
 def find_next_package(available_packages, current_package):
@@ -337,6 +328,7 @@ print("****** Welcome to the Western Governors University Package Service! *****
 print("The day started at 8:00 am (or 8 hours and 0 minutes)")
 print("The deliveries were done at " + str(end_time))
 print("I can show you the statuses of all the packages at any given time during the delivery day")
+print("Use military time for the hours, ie. 1 PM is 'hour 13'")
 print("Press any non-number (such as a letter) to exit the program")
 
 while True:

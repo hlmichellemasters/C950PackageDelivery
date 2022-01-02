@@ -35,12 +35,8 @@ class Package:
 
     # returns the package info in an easy to read format
     def __str__(self):
-        package_info = '{:3s} {:38s} {:9s} {:3s} {:3s} {:30s} {:20s}'.format(self.id, self.address,
-                                                                             self.delivery_deadline,
-                                                                             # self.city,
-                                                                             # self.zip_code, self.mass_kg,
-                                                                             str("%.2f" % self.priority_heuristic),
-                                                                             self.region,
-                                                                             self.delivery_status,
-                                                                             self.special_notes)
+        package_info = '{:3s} {:38s} {:9s} {:30s} {:20s}'.format(self.id, self.address,
+                                                                 self.delivery_deadline,
+                                                                 self.delivery_status,
+                                                                 self.special_notes)
         return package_info
