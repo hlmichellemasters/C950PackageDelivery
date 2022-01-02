@@ -86,6 +86,7 @@ class HashTable:
             # another collision!
             collisions += 1                                        # increment collision number and continue while loop
 
+    # displays each object in the hash table
     def display_table(self):
         for x in range(self.array_size):
             print(str(self.find(x)))

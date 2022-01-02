@@ -50,6 +50,7 @@ def timestamp(truck_time):
     timestamps[time_string] = current_package_info
 
 
+# displays the timestamp of packages given a number of hours and minutes
 def display_timestamp(hours, minutes):
     hr = hours
     mins = minutes
@@ -69,6 +70,7 @@ def display_timestamp(hours, minutes):
             packages_info_at_that_time.display_table()
 
 
+# calculates and returns the distance between two addresses given to it
 def distance_between(address1, address2):
     address1_index = address_data.index(address1)
     address2_index = address_data.index(address2)
@@ -84,10 +86,11 @@ def load_truck(truck, package_id):
     package_to_load = package_hashtable.find(package_id)  # copies package from hashtable to load truck by package ID
 
     truck.packages_on_board.append(package_to_load)  # adds package to trucks list to deliver
-    package_to_load.delivery_status = "enroute with + " + truck.name  # updates package location to truck (name)
+    package_to_load.delivery_status = "enroute with " + truck.name  # updates package location to truck (name)
     package_hashtable.insert_or_update(package_to_load)  # updates hash table that holds package info
 
 
+# adds packages to a list to return given a package ID
 def add_packages_to_list(package_ids_to_add):
     list_to_return = []
     for package_id in package_ids_to_add:
@@ -127,6 +130,7 @@ def auto_load_truck(truck):
     packages_south = []
     packages_west = []
 
+    # prioritizing by those regions for which packages are available
     for package in total_available_package_list:
         if package.region == "N":
             packages_north.append(package)
@@ -202,17 +206,19 @@ def auto_load_truck(truck):
 def find_next_package(available_packages, current_package):
     min_distance_max_priority = inf
 
+    # assign the address as the HUB if there is no currently "just delivered" package
     if current_package is None:
         current_package_address = HUB_address
         print("current package is None!")
+    # else the address is whatever the last delivered package's address was
     else:
         current_package_address = current_package.address
 
+    # then for every available package, calculate the distance and priority level to determine next best package
     for this_package in available_packages:
         priority_heuristic = 1
         distance = distance_between(current_package_address, this_package.address)
 
-        # this gets me 142 miles, but 6 is late
         if this_package.delivery_deadline == "9:00 AM":
             priority_heuristic = .05
         elif "Must be delivered with" in this_package.special_notes:
@@ -235,6 +241,7 @@ def find_next_package(available_packages, current_package):
     return package_id_to_load
 
 
+# "Delivers packages" by popping next package off delivery list, moves truck's location, and updating total mileage
 def truck_deliver_packages(truck):
     global total_mileage, package_9_address_correction_time
     while truck.packages_on_board:
@@ -325,17 +332,24 @@ print('truck2 made ' + str(truck2.completed_trips) + " trips")
 
 # # # command line interface
 
-# print("****** Welcome to the Western Governors University Package Service! ******\n\n")
-# print("The day started at 8:00 am (or 8 hours and 0 minutes)")
-# print("The deliveries were done at " + str(end_time))
-# print("I can show you the statuses of all the packages at any given time during the delivery day")
-# print("Press any non-number (such as a letter) to exit the program")
 
-# while True:
-#     try:
-#         hour = int(input("What hour would you like to look at a timestamp of the packages for?"))
-#         minute = int(input("What minute would you like to look at a timestamp of the packages for?"))
-#         display_timestamp(hour, minute)
-#     except ValueError:
-#         print("You entered a non-number, now exiting the program")
-#         exit()
+print("****** Welcome to the Western Governors University Package Service! ******\n\n")
+print("The day started at 8:00 am (or 8 hours and 0 minutes)")
+print("The deliveries were done at " + str(end_time))
+print("I can show you the statuses of all the packages at any given time during the delivery day")
+print("Press any non-number (such as a letter) to exit the program")
+
+while True:
+    try:
+        hour = int(input("What hour would you like to look at a timestamp of the packages for?"))
+        minute = int(input("What minute would you like to look at a timestamp of the packages for?"))
+        if hour < 8:
+            print("That is a time before we opened at 8am, try again")
+            continue
+        if hour > 24 or minute < 0 or minute > 59:
+            print("That is not a valid time of day in hours or minutes, try again")
+            continue
+        display_timestamp(hour, minute)
+    except ValueError:
+        print("You entered a non-number, now exiting the program")
+        exit()

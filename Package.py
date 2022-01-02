@@ -1,3 +1,4 @@
+# class to create packages, holds all the package information and special notes
 class Package:
     def __init__(self, package_id, address, city, state, zip_code, region, delivery_deadline, mass_kg,
                  special_notes):
@@ -15,22 +16,26 @@ class Package:
         # Delivery status must include the time.
         self.delivery_status = "at the hub"
 
+    # sets the priority of the package
     def set_priority(self, priority):
         self.priority_heuristic = priority
 
         return "priority set to " + str(priority)
 
+    # sets the delivery status of the package
     def deliver(self, time):
         self.delivery_status = "delivered at " + str(time)
 
+    # corrects the address of the package, if necessary
     def update_address(self, corrected_address):
         self.address = corrected_address[0]
         self.city = corrected_address[1]
         self.state = corrected_address[2]
         self.zip_code = corrected_address[3]
 
+    # returns the package info in an easy to read format
     def __str__(self):
-        package_info = '{:3s} {:38s} {:9s} {:3s} {:3s} {:15s} {:20s}'.format(self.id, self.address,
+        package_info = '{:3s} {:38s} {:9s} {:3s} {:3s} {:30s} {:20s}'.format(self.id, self.address,
                                                                              self.delivery_deadline,
                                                                              # self.city,
                                                                              # self.zip_code, self.mass_kg,

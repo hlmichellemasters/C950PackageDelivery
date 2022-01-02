@@ -3,6 +3,7 @@ from Package import Package
 import csv
 
 
+# loads the package data from the csv file
 def load_package_data(package_data):
     total_available_package_list = []
     with open(package_data) as package_file:  # open(package_data) as package_file,
@@ -39,6 +40,7 @@ def load_distance_data(file):
     return distance_list
 
 
+# loads the address data from the csv file
 def load_address_data(file):
     with open(file) as address_file:
         address_list = []
